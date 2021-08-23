@@ -1,0 +1,16 @@
+/.ipynb_checkpoints
+src/.ipynb_checkpoints
+/.proj
+/.project.json
+/.virtual_documents
+/.vscode
+/archive
+/__pycache__
+*.pyc
+tags
+test.*
+temp*.*
+*ipynb
+user_setting.pickle
+
+
