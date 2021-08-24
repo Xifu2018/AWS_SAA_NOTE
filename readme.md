@@ -15,6 +15,12 @@
     * [IAM Roles for Services](#iam-roles-for-services)
     * [IAM Security Tools](#iam-security-tools)
     * [IAM guidelines & best practices](#iam-guidelines--best-practices)
+* [AWS CLI, SDK, IAM Roles & Policies](#aws-cli-sdk-iam-roles--policies)
+    * [AWS CLI S3 commands](#aws-cli-s3-commands)
+    * [IAM Roles and Policies](#iam-roles-and-policies)
+    * [AWS Policy Simulator](#aws-policy-simulator)
+    * [AWS EC2 Instance Metadata](#aws-ec2-instance-metadata)
+    * [AWS SDK Overview](#aws-sdk-overview)
 * [Identity and Access Management (IAM) - Advanced](#identity-and-access-management-iam---advanced)
     * [AWS STS - Security Token Service](#aws-sts---security-token-service)
     * [Identity Federation in AWS](#identity-federation-in-aws)
@@ -32,7 +38,7 @@
     * [Classic Ports to know](#classic-ports-to-know)
     * [SSH connection](#ssh-connection)
     * [EC2 Instances Purchasing Options](#ec2-instances-purchasing-options)
-* [more on EC2](#more-on-ec2)
+* [More on EC2](#more-on-ec2)
     * [Private vs Public IP (IPv4)](#private-vs-public-ip-ipv4)
     * [EC2 Spot Instance Requests](#ec2-spot-instance-requests)
     * [Elastic Network Interfaces (ENI)](#elastic-network-interfaces-eni)
@@ -95,12 +101,6 @@
     * [Health Checks](#health-checks)
     * [Routing Policy](#routing-policy)
     * [Route53 as a Registrar](#route53-as-a-registrar)
-* [Solutions Architecture Discussions Overview](#solutions-architecture-discussions-overview)
-    * [Stateless Web App: WhatIsTheTime.com](#stateless-web-app-whatisthetimecom)
-    * [Stateful Web App: MyClothes.com](#stateful-web-app-myclothescom)
-    * [Stateful Web App: MyWordPress.com](#stateful-web-app-mywordpresscom)
-    * [Instantiating Application Quickly](#instantiating-application-quickly)
-    * [Beanstalk Overview](#beanstalk-overview)
 * [Amazon S3](#amazon-s3)
     * [S3 Buckets and Objects](#s3-buckets-and-objects)
     * [S3 Encryption for Objects](#s3-encryption-for-objects)
@@ -108,11 +108,6 @@
     * [S3 Websites](#s3-websites)
     * [S3 CORS](#s3-cors)
     * [S3 Consistency Model](#s3-consistency-model)
-* [AWS CLI, SDK, IAM Roles & Policies](#aws-cli-sdk-iam-roles--policies)
-    * [AWS CLI S3 commands](#aws-cli-s3-commands)
-    * [IAM Roles and Policies](#iam-roles-and-policies)
-    * [AWS Policy Simulator](#aws-policy-simulator)
-    * [AWS EC2 Instance Metadata](#aws-ec2-instance-metadata)
 * [S3 Advanced Topics and Athena](#s3-advanced-topics-and-athena)
     * [S3 MFA-Delete](#s3-mfa-delete)
     * [S3 Access Logs](#s3-access-logs)
@@ -217,6 +212,12 @@
     * [AWS DataSync](#aws-datasync-1)
     * [AWS Backup](#aws-backup)
     * [Transferring large amount of data into AWS](#transferring-large-amount-of-data-into-aws)
+* [Solutions Architecture Discussions Overview](#solutions-architecture-discussions-overview)
+    * [Stateless Web App: WhatIsTheTime.com](#stateless-web-app-whatisthetimecom)
+    * [Stateful Web App: MyClothes.com](#stateful-web-app-myclothescom)
+    * [Stateful Web App: MyWordPress.com](#stateful-web-app-mywordpresscom)
+    * [Instantiating Application Quickly](#instantiating-application-quickly)
+    * [Beanstalk Overview](#beanstalk-overview)
 * [More Solution Architectures](#more-solution-architectures)
     * [Lambda, SNS & SQS](#lambda-sns--sqs)
     * [S3 Events](#s3-events)
@@ -237,7 +238,7 @@
     * [Cost Explorer](#cost-explorer)
     * [AWS X-Ray](#aws-x-ray)
     * [AWS other services cheat-sheet](#aws-other-services-cheat-sheet)
-* [Whitepapers](#whitepapers)
+* [Whitepaper](#whitepaper)
     * [Well Architected Framework](#well-architected-framework)
     * [Trusted Advisor](#trusted-advisor)
 
@@ -395,6 +396,87 @@
 * use Access Keys for Programmatic Access (CLI/SDK)
 * Audit permission of your account with the IAM Credentials Report
 * **Never share IAM users & Access Keys**
+
+## AWS CLI, SDK, IAM Roles & Policies
+
+### AWS CLI S3 commands
+* ls
+* cp, mv, rm
+* mb: make bucket
+* rb: remove bucket
+* AWS CLI available in many other services as well
+    * [AWS CLI Command Reference](https://docs.aws.amazon.com/cli/latest/index.html) 
+
+
+### IAM Roles and Policies 
+* policy editor:
+    * Visual editor
+        1. choose service
+        2. specify actions with access level:
+            * list
+            * read
+            * write
+            * permissions management
+        3. specify resources: specific vs all resources
+        4. specify request conditions (optional)
+    * AWS Policy Generator: another policy generator with GUI 
+    * JSON
+* under each policy summary tab:
+    * permissions
+    * policy usage
+    * policy versions
+    * access advisor
+* under each role summary tab:
+    * permissions (policies attached to the role)
+    * trust relationships
+    * access advisor
+    * revoke sessions
+* level of access
+	* power user access allows access to all AWS services except the management of groups and users within IAM
+	* root account have adminstrator access including changing billing details and even close the account
+* exam tips:
+	* roles are more secure than storing access key and secret access key on individual EC2 instances
+	* roles are easier to manage
+	* roles can be assigned to an EC2 instnace using both the console and CLI
+		* they take effect almost immediately (even if it is already attached to a running EC2)
+	* roles are universal - you can use them in any region
+
+
+### AWS Policy Simulator
+* create users/groups/roles
+    * create policy on the fly or test existing policies 
+    * and Run Simulation: test actions w/ contexts
+* can also test policy with CLI
+
+
+### AWS EC2 Instance Metadata
+* a powerful yet least known features to developers
+* it allows EC2 instances to "learn about themselves" without using an IAM Role for that purpose
+* the URL is [http://169.254.169.254/latest/meta-data](http://169.254.169.254/latest/meta-data) 
+* you can retrieve the IAM Role name from the metadata, but you CANNOT retrieve the IAM policy.
+* `Metadata` = info about the EC2 instance
+* `Userdata` = launch script of the EC2 instance
+
+
+### AWS SDK Overview
+* perform actions on AWS directly from your application code >> SDK (software development kit)
+* official SDKs are: 
+    * Java, .NET, Node.js, PHP, Python (named boto3 / botocore), Go, Ruby, C++
+* the AWS CLI uses the Python SDK (boto3)
+* if you don't specify or configure a default region, then us-east-1 will be chosen by default
+* AWS SDK Credentials Security
+    * it’s recommend to use the `default credential provider chain`
+    * the default credential provider chain works seamlessly with:
+        * AWS credentials at ~/.aws/credentials (only on our computers or on premise)
+        * Instance Profile Credentials using IAM Roles (for EC2 machines, etc…)
+        * environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+    * overall, NEVER EVER STORE AWS CREDENTIALS IN YOUR CODE.
+    * best practice is for credentials to be inherited from mechanisms above, and 100% IAM Roles if working from within AWS Services
+* Exponential Backoff
+    * any API that fails because of too many calls needs to be retried with Exponential Backoff
+    * these apply to rate limited API
+    * retry mechanism included in SDK API calls
+
 
 ## Identity and Access Management (IAM) - Advanced
 
@@ -817,7 +899,7 @@
 
 
 
-## more on EC2
+## More on EC2
 
 ### Private vs Public IP (IPv4)
 
@@ -2219,125 +2301,6 @@ B ==yes==> D(ignore action)
     2. Update name server records on 3rd party website to use Route 53 name servers
 
 
-## Solutions Architecture Discussions Overview
-
-### Stateless Web App: WhatIsTheTime.com
-* goal:
-    * allows peopel to know what time it is
-    * we don't need a database
-    * start small and can accept downtime
-    * fully scale vertically and horizontally, no downtime
-* solution:
-    * public t2 with elastic ip
-    * t2.micro >> m5
-    * downtime while upgrading to m5
-    * scale horizontally, more m5
-    * setup Route53 with TTL 1 hour
-        * use A Record
-        * setup security group rules
-    * setup ELB (public) + Health Checks linking to private m5 instances
-        * use Alias record
-    * setup auto-scaling group for EC2 instances (to scale-in and scale-out)
-    * adding Multi AZ to ELB
-    * reserved instances to achieve cost savings
-
-
-### Stateful Web App: MyClothes.com
-* goal:
-    * MyCLothes.com allows people to buy clothes online
-    * There's a shopping cart
-        * user should not lose their shopping cart
-    * website is having hundreds of users at the same time
-    * need to scale, maintain horizontal scalability and keep web application as stateless as possible
-* solution:
-    * Route53 connects to ELB (Multi AZ | Stickiness) which link to private EC2 in multiple AZs
-        * downside: if m5 goes down, user loses the shopping cart
-        * solution - sending content in Web Cookies and achieve stateless
-            * downside: security risk (cookie can be altered); must be validated; must be less than 4KB
-            * solution - sending session_id in Web Cookies and EC2 writes/retrieves session data on ElastiCache 
-                * Multi AZ to increase availability
-            * writes/retrieves data onto DynamoDB for NoSql data and RDS for structured data 
-                * with read replica for scaling reads
-                * multiple AZ to increase availability
-            * stickiness is not needed if using Cookies
-    * security: 
-        * public to Route53 and ELB; 
-        * security group from the LB and EC2 and between Eco and ElastiCache / RDS
-
-
-### Stateful Web App: MyWordPress.com
-* goal:
-    * a fully scalable WordPress website
-    * to access and correctly display picture uploads
-    * user data and the blog content stored in a MySQL database
-* solution:
-    * similar to previous MyClothes.com example with Aurora MySQL  (Multi AZ | Read Replica)
-    * store image with EBS
-        * downside: EBS works well with one EC2 instance only (single instance ,app) can't easily sync between EBS
-        * solution: storing image with EFS connected with ENI to each EC2 (distributed app)
-
-### Instantiating Application Quickly
-* when launching a full stack (EC2, EBS, RDS), it can take time to:
-    * install applications
-    * insert initial (or recovery) data
-    * configure everything
-    * launch the application
-* EC2 Instances:
-    * **Golden AMI**: install your applications, OS dependencies etc beforehand
-    * **Bootstrap using User Data**: for dynamic configuration, use User Data scripts
-    * **Hybrid**: mix Golden AMI and User Data (Elastic Beanstalk)
-* RDS Database:
-    * restore from a snapshot: the database will have schemas and data ready
-* EBS Volumes:
-    * restore from a snapshot: the disk will already be formatted and have data
-
-
-### Beanstalk Overview
-* Developer problems on AWS 
-    * managing infrastructure 
-    * deploying code
-    * configuring all the database, load balancers, etc
-    * scaling concerns
-    * while most web APPs have the same architecture: ALB + ASG
-* ElasticBeanStalk Overview:
-    * provides a developer centric view of deploying an app on AWS
-    * it uses all the necessary components: EC2, ASG, ELB, RDS, etc.
-    * user has the full control over the configuration 
-        * while only needs to be responsible for the application code
-    * ElasticBeanStalk is free managed service but you pay for the underlying instances
-        * instance configuration / OS is handled by BeanStalk
-			* automatically handles capacity provisioning, load balancing, 
-			* scaling, application, health monitoring, instance configuration
-			* etc
-        * deployment strategy is configurable but performed by ElasticBeanStalk
-    * 3 architecture models:
-        * single instance deployment: good for dev
-        * LB + ASG: great for production or pre-production web applications
-        * ASG only: great for non-web apps in production (workers, etc)
-    * ElasticBeanStalk has 3 components:
-        * application
-			*  collection of Elastic Beanstalk components (environments, versions, configurations, ...)
-        * application version - each deployment gets assigned a version
-                * you deploy APP versions to environment and can promote APP versions to the next environment
-                * rollback feature to previous app version
-        * environment
-            * collection of AWS resources running an application version (only one application version at a time)
-            * tiers: web server environment tier & worker environment tier
-            * you can create multiple environments (dev, test, prod,... )
-    * full control over life cycle of environments:
-        ```mermaid
-        flowchart LR
-        A[create <br> application] ==>C["upload version <br> (+alias)"]
-        B[create <br> environments] ==>C
-        C==>D[release to <br> environments]
-        ```
-    * support for many platforms:
-        * GO; Java SE; Java with Tomcat; .Net on Windows Server with IIS
-        * Node.js; PHD; Python; Ruby, Packer Builder
-        * single-container / multi-container docker
-        * if not supported, you can create a custom platform (advanced)
-
-
 ## Amazon S3
 
 ### S3 Buckets and Objects
@@ -2485,87 +2448,6 @@ B ==yes==> D(ignore action)
 	- subsequent read request immediately receives the latest version of the object (Read after Write consistency)
 	- subsequent list request immediately reflect changes (list consistency)
 - available at no additional cost, without any performance impact
-
-
-## AWS CLI, SDK, IAM Roles & Policies
-
-### AWS CLI S3 commands
-* ls
-* cp, mv, rm
-* mb: make bucket
-* rb: remove bucket
-* AWS CLI available in many other services as well
-    * [AWS CLI Command Reference](https://docs.aws.amazon.com/cli/latest/index.html) 
-
-
-### IAM Roles and Policies 
-* policy editor:
-    * Visual editor
-        1. choose service
-        2. specify actions with access level:
-            * list
-            * read
-            * write
-            * permissions management
-        3. specify resources: specific vs all resources
-        4. specify request conditions (optional)
-    * AWS Policy Generator: another policy generator with GUI 
-    * JSON
-* under each policy summary tab:
-    * permissions
-    * policy usage
-    * policy versions
-    * access advisor
-* under each role summary tab:
-    * permissions (policies attached to the role)
-    * trust relationships
-    * access advisor
-    * revoke sessions
-* level of access
-	* power user access allows access to all AWS services except the management of groups and users within IAM
-	* root account have adminstrator access including changing billing details and even close the account
-* exam tips:
-	* roles are more secure than storing access key and secret access key on individual EC2 instances
-	* roles are easier to manage
-	* roles can be assigned to an EC2 instnace using both the console and CLI
-		* they take effect almost immediately (even if it is already attached to a running EC2)
-	* roles are universal - you can use them in any region
-
-
-### AWS Policy Simulator
-* create users/groups/roles
-    * create policy on the fly or test existing policies 
-    * and Run Simulation: test actions w/ contexts
-* can also test policy with CLI
-
-
-### AWS EC2 Instance Metadata
-* a powerful yet least known features to developers
-* it allows EC2 instances to "learn about themselves" without using an IAM Role for that purpose
-* the URL is [http://169.254.169.254/latest/meta-data](http://169.254.169.254/latest/meta-data) 
-* you can retrieve the IAM Role name from the metadata, but you CANNOT retrieve the IAM policy.
-* `Metadata` = info about the EC2 instance
-* `Userdata` = launch script of the EC2 instance
-
-
-AWS SDK Overview
-* perform actions on AWS directly from your application code >> SDK (software development kit)
-* official SDKs are: 
-    * Java, .NET, Node.js, PHP, Python (named boto3 / botocore), Go, Ruby, C++
-* the AWS CLI uses the Python SDK (boto3)
-* if you don't specify or configure a default region, then us-east-1 will be chosen by default
-* AWS SDK Credentials Security
-    * it’s recommend to use the `default credential provider chain`
-    * the default credential provider chain works seamlessly with:
-        * AWS credentials at ~/.aws/credentials (only on our computers or on premise)
-        * Instance Profile Credentials using IAM Roles (for EC2 machines, etc…)
-        * environment variables (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
-    * overall, NEVER EVER STORE AWS CREDENTIALS IN YOUR CODE.
-    * best practice is for credentials to be inherited from mechanisms above, and 100% IAM Roles if working from within AWS Services
-* Exponential Backoff
-    * any API that fails because of too many calls needs to be retried with Exponential Backoff
-    * these apply to rate limited API
-    * retry mechanism included in SDK API calls
 
 
 ## S3 Advanced Topics and Athena
@@ -5307,6 +5189,125 @@ E--insert-->H[Amazon RDS]
 * for on-going replication / transfers: Site-to-Site VPN or DX with DMS or DataSync
 
 
+## Solutions Architecture Discussions Overview
+
+### Stateless Web App: WhatIsTheTime.com
+* goal:
+    * allows peopel to know what time it is
+    * we don't need a database
+    * start small and can accept downtime
+    * fully scale vertically and horizontally, no downtime
+* solution:
+    * public t2 with elastic ip
+    * t2.micro >> m5
+    * downtime while upgrading to m5
+    * scale horizontally, more m5
+    * setup Route53 with TTL 1 hour
+        * use A Record
+        * setup security group rules
+    * setup ELB (public) + Health Checks linking to private m5 instances
+        * use Alias record
+    * setup auto-scaling group for EC2 instances (to scale-in and scale-out)
+    * adding Multi AZ to ELB
+    * reserved instances to achieve cost savings
+
+
+### Stateful Web App: MyClothes.com
+* goal:
+    * MyCLothes.com allows people to buy clothes online
+    * There's a shopping cart
+        * user should not lose their shopping cart
+    * website is having hundreds of users at the same time
+    * need to scale, maintain horizontal scalability and keep web application as stateless as possible
+* solution:
+    * Route53 connects to ELB (Multi AZ | Stickiness) which link to private EC2 in multiple AZs
+        * downside: if m5 goes down, user loses the shopping cart
+        * solution - sending content in Web Cookies and achieve stateless
+            * downside: security risk (cookie can be altered); must be validated; must be less than 4KB
+            * solution - sending session_id in Web Cookies and EC2 writes/retrieves session data on ElastiCache 
+                * Multi AZ to increase availability
+            * writes/retrieves data onto DynamoDB for NoSql data and RDS for structured data 
+                * with read replica for scaling reads
+                * multiple AZ to increase availability
+            * stickiness is not needed if using Cookies
+    * security: 
+        * public to Route53 and ELB; 
+        * security group from the LB and EC2 and between Eco and ElastiCache / RDS
+
+
+### Stateful Web App: MyWordPress.com
+* goal:
+    * a fully scalable WordPress website
+    * to access and correctly display picture uploads
+    * user data and the blog content stored in a MySQL database
+* solution:
+    * similar to previous MyClothes.com example with Aurora MySQL  (Multi AZ | Read Replica)
+    * store image with EBS
+        * downside: EBS works well with one EC2 instance only (single instance ,app) can't easily sync between EBS
+        * solution: storing image with EFS connected with ENI to each EC2 (distributed app)
+
+### Instantiating Application Quickly
+* when launching a full stack (EC2, EBS, RDS), it can take time to:
+    * install applications
+    * insert initial (or recovery) data
+    * configure everything
+    * launch the application
+* EC2 Instances:
+    * **Golden AMI**: install your applications, OS dependencies etc beforehand
+    * **Bootstrap using User Data**: for dynamic configuration, use User Data scripts
+    * **Hybrid**: mix Golden AMI and User Data (Elastic Beanstalk)
+* RDS Database:
+    * restore from a snapshot: the database will have schemas and data ready
+* EBS Volumes:
+    * restore from a snapshot: the disk will already be formatted and have data
+
+
+### Beanstalk Overview
+* Developer problems on AWS 
+    * managing infrastructure 
+    * deploying code
+    * configuring all the database, load balancers, etc
+    * scaling concerns
+    * while most web APPs have the same architecture: ALB + ASG
+* ElasticBeanStalk Overview:
+    * provides a developer centric view of deploying an app on AWS
+    * it uses all the necessary components: EC2, ASG, ELB, RDS, etc.
+    * user has the full control over the configuration 
+        * while only needs to be responsible for the application code
+    * ElasticBeanStalk is free managed service but you pay for the underlying instances
+        * instance configuration / OS is handled by BeanStalk
+			* automatically handles capacity provisioning, load balancing, 
+			* scaling, application, health monitoring, instance configuration
+			* etc
+        * deployment strategy is configurable but performed by ElasticBeanStalk
+    * 3 architecture models:
+        * single instance deployment: good for dev
+        * LB + ASG: great for production or pre-production web applications
+        * ASG only: great for non-web apps in production (workers, etc)
+    * ElasticBeanStalk has 3 components:
+        * application
+			*  collection of Elastic Beanstalk components (environments, versions, configurations, ...)
+        * application version - each deployment gets assigned a version
+                * you deploy APP versions to environment and can promote APP versions to the next environment
+                * rollback feature to previous app version
+        * environment
+            * collection of AWS resources running an application version (only one application version at a time)
+            * tiers: web server environment tier & worker environment tier
+            * you can create multiple environments (dev, test, prod,... )
+    * full control over life cycle of environments:
+        ```mermaid
+        flowchart LR
+        A[create <br> application] ==>C["upload version <br> (+alias)"]
+        B[create <br> environments] ==>C
+        C==>D[release to <br> environments]
+        ```
+    * support for many platforms:
+        * GO; Java SE; Java with Tomcat; .Net on Windows Server with IIS
+        * Node.js; PHD; Python; Ruby, Packer Builder
+        * single-container / multi-container docker
+        * if not supported, you can create a custom platform (advanced)
+
+
 ## More Solution Architectures
 
 ### Lambda, SNS & SQS
@@ -5618,7 +5619,7 @@ E--insert-->H[Amazon RDS]
 * SSO (Single Sign On): One login managed by AWS to log in to various business SAML 2.0-compatible applications (office 365 etc)
 
 
-## Whitepapers
+## Whitepaper
 
 ### Well Architected Framework 
 * General Guiding Principles
