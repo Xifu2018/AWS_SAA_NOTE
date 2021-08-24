@@ -15,6 +15,14 @@
     * [IAM Roles for Services](#iam-roles-for-services)
     * [IAM Security Tools](#iam-security-tools)
     * [IAM guidelines & best practices](#iam-guidelines--best-practices)
+* [Identity and Access Management (IAM) - Advanced](#identity-and-access-management-iam---advanced)
+    * [AWS STS - Security Token Service](#aws-sts---security-token-service)
+    * [Identity Federation in AWS](#identity-federation-in-aws)
+    * [AWS Directory Services](#aws-directory-services)
+    * [AWS Organizations](#aws-organizations)
+    * [IAM Advanced](#iam-advanced)
+    * [AWS Resource Access Manager (RAM)](#aws-resource-access-manager-ram)
+    * [AWS Single Sign-On (SSO)](#aws-single-sign-on-sso)
 * [Amazon EC2](#amazon-ec2)
     * [What is EC2:](#what-is-ec2)
     * [EC2 sizing & configuration options](#ec2-sizing--configuration-options)
@@ -27,7 +35,7 @@
 * [more on EC2](#more-on-ec2)
     * [Private vs Public IP (IPv4)](#private-vs-public-ip-ipv4)
     * [EC2 Spot Instance Requests](#ec2-spot-instance-requests)
-    * [ELastic Network Interfaces (ENI)](#elastic-network-interfaces-eni)
+    * [Elastic Network Interfaces (ENI)](#elastic-network-interfaces-eni)
     * [EC2 Hibernate](#ec2-hibernate)
     * [EC2 Nitro](#ec2-nitro)
     * [vCPU](#vcpu)
@@ -67,6 +75,19 @@
     * [ElastiCache Overview](#elasticache-overview)
     * [ElastiCache - Cache Security](#elasticache---cache-security)
     * [Patterns for ElastiCache](#patterns-for-elasticache)
+* [Database in AWS](#database-in-aws)
+    * [Choosing the Right Database](#choosing-the-right-database)
+    * [RDS](#rds)
+    * [Aurora](#aurora)
+    * [ElastiCache](#elasticache)
+    * [DynamoDB](#dynamodb)
+    * [S3](#s3)
+    * [Athena](#athena)
+    * [Redshift](#redshift)
+    * [AWS Glue](#aws-glue)
+    * [EMR](#emr)
+    * [Neptune](#neptune)
+    * [ElasticSearch](#elasticsearch)
 * [Route53](#route53)
     * [Route53 Overview](#route53-overview)
     * [DNS Records TTL (Time to Live)](#dns-records-ttl-time-to-live)
@@ -137,7 +158,7 @@
     * [What's Serverless](#whats-serverless)
     * [serverless in AWS](#serverless-in-aws)
     * [AWS Lambda intro](#aws-lambda-intro)
-    * [DynamoDB](#dynamodb)
+    * [DynamoDB](#dynamodb-1)
     * [AWS API Gateway](#aws-api-gateway)
     * [AWS Cognito](#aws-cognito)
     * [AWS SAM - Serverless Application Model](#aws-sam---serverless-application-model)
@@ -148,32 +169,11 @@
     * [Distributing paid content](#distributing-paid-content)
     * [Software Updates Offloading](#software-updates-offloading)
     * [Big Data Ingestion Pipeline](#big-data-ingestion-pipeline)
-* [Database in AWS](#database-in-aws)
-    * [Choosing the Right Database](#choosing-the-right-database)
-    * [RDS](#rds)
-    * [Aurora](#aurora)
-    * [ElastiCache](#elasticache)
-    * [DynamoDB](#dynamodb-1)
-    * [S3](#s3)
-    * [Athena](#athena)
-    * [Redshift](#redshift)
-    * [AWS Glue](#aws-glue)
-    * [EMR](#emr)
-    * [Neptune](#neptune)
-    * [ElasticSearch](#elasticsearch)
 * [AWS Monitoring & Audit](#aws-monitoring--audit)
     * [AWS CloudWatch](#aws-cloudwatch)
     * [AWS CloudTrail](#aws-cloudtrail)
     * [AWS Config](#aws-config)
     * [CloudWatch vs CloudTrail vs Config](#cloudwatch-vs-cloudtrail-vs-config)
-* [Identity and Access Management (IAM) - Advanced](#identity-and-access-management-iam---advanced)
-    * [AWS STS - Security Token Service](#aws-sts---security-token-service)
-    * [Identity Federation in AWS](#identity-federation-in-aws)
-    * [AWS Directory Services](#aws-directory-services)
-    * [AWS Organizations](#aws-organizations)
-    * [IAM Advanced](#iam-advanced)
-    * [AWS Resource Access Manager (RAM)](#aws-resource-access-manager-ram)
-    * [AWS Single Sign-On (SSO)](#aws-single-sign-on-sso)
 * [AWS Security & Encryption](#aws-security--encryption)
     * [Why encryption](#why-encryption)
     * [AWS KMS (Key Management Service)](#aws-kms-key-management-service)
@@ -315,12 +315,12 @@
     * Version: policy language version, always include "2012-10-17"
     * Id: an identifier for the policy (optional)
     * Statement: one or more individual statements (required)
-        *`Sid`: an identifier for the statement (optional)
-        *`Effect`: whether the statement allows or denies access (Allow, Deny)
-        *`Principal`: account/user/role to which this policy applied to
-        *`Action`: list of actions this policy allows or denies
-        *`Resource`: list of resource to which the actions applied to
-        *`Condition`: conditions for when this policy is in effect (optional)
+        * `Sid`: an identifier for the statement (optional)
+        * `Effect`: whether the statement allows or denies access (Allow, Deny)
+        * `Principal`: account/user/role to which this policy applied to
+        * `Action`: list of actions this policy allows or denies
+        * `Resource`: list of resource to which the actions applied to
+        * `Condition`: conditions for when this policy is in effect (optional)
 
 ### IAM - password policy
 * strong passwords = higher security for your accoutns
@@ -396,6 +396,241 @@
 * Audit permission of your account with the IAM Credentials Report
 * **Never share IAM users & Access Keys**
 
+## Identity and Access Management (IAM) - Advanced
+
+### AWS STS - Security Token Service
+
+- overview:
+    - allows to grant limited and temporary access to AWS resources
+    - token is valid for up to one hour (must be refreshed)
+    - AssumeRole
+        - within your own account: for enhanced security
+        - Cross Account Access: assume role in target account to perform actions there
+    - AssumeRoleWithSAML
+        - Return credentials for users logged with SAML
+            - SAML: Security Assertion Markup Language, an open standard that allows identity providers (IdP) to pass authorization credentials to service providers.
+    - AssumeRoleWithWebIdentity
+        - return creds for users logged with an IdProvider (Facebook Login, Google Login, OIDC compatible…)
+        - AWS recommends against using this, and using Cognito instead
+    - GetSessionToken
+        - for MFA, from a user or AWS account root user
+- using STS to assume a role
+    - define an IAM Role within your account or cross-account
+    - define which principals can access this IAM Role
+    - use AWS STS to retrieve credentials and impersonate the IAM Role you have access to (AssumeRole API)
+    - temporary credentials can be valid between 15 minutes to 1 hour
+- cross account access with STS
+    1.  in production account, admin creates role that grants *development account* read/write access to ProductionApp bucket
+    2.  in development account, admin grants members of the *group developers* permission to assume the UpdateApp role
+    3.  developer requests access to role
+    4.  STS returns role credentials
+    5.  developer updates ProductionApp by using the role credentials
+
+### Identity Federation in AWS
+
+- overview:
+    - federation lets users outside of AWS to assume temporary role for accessing AWS resources.
+    - these users assume identity provided access role.
+    - federations can have many flavors:
+        - SAML 2.0
+        - Custom Identity Broker
+        - Web Identity Federation with Amazon Cognito
+        - Web Identity Federation without Amazon Cognito
+        - Single Sign On
+        - Non-SAML with AWS Microsoft AD
+    - using federation, you don’t need to create IAM users (user management is outside of AWS)
+- SAML 2.0 Federation
+    - to integrate Active Directory / ADFS with AWS (or any SAML 2.0)
+    - provides access to AWS Console or CLI (through temporary creds)
+    - no need to create an IAM user for each of your employees
+        - using SAML-based federation for API access to AWS
+            - <img src="./_resources/9a1ab0e2848b47a6894c8bee12c41013.png" alt="79bf4a1307992ae40c8aa4fffb2400af.png" width="803" height="451" class="jop-noMdConv">
+    - enabling SAML 2.0 federated users to access the AWS Management Console
+        - Active Directory federation services (same process as with any SAML 2.0 compatible IdP)
+        - ![3ff78f8e260c2badedba5282c24e9f89.png](./_resources/b06e06af354c4f2da2b4f9648bb65310.png)
+        - needs to setup a trust between AWS IAM and SAML (both ways)
+        - SAML 2.0 enables web-based, cross domain SSO
+        - uses the STS API: AssumeRoleWithSAML
+        - note federation through SAML is the *old way* of doing things
+        - amazon Single Sign On (SSO) Federation is the *new managed and simpler way*
+            - <img src="./_resources/d2a03c941db248aeb3b930d453718bb0.png" alt="5f71089d87825ac43a4010aad50e14bf.png" width="804" height="464" class="jop-noMdConv">
+- Custom Identity Broker Application
+    - use only if identity provider is not compatible with SAML 2.0
+    - the identity broker must determine the appropriate IAM policy
+    - uses the STS API: AssumeRole or GetFederationToken
+    - ![a133386e381aa917d1a372b5bb3a7ff6.png](./_resources/b50a13a9d42c4bb5883085c8692fab6d.png)
+- Web Identity Federation – AssumeRoleWithWebIdentity
+    - not recommended by AWS – use Cognito instead (allows for anonymous users, data synchronization, MFA)
+        - ![6e12784dec3ae9d96a467979460412c0.png](./_resources/4277856be74743648420bda5c81130fd.png)
+        - AWS Cognito
+            - goal:
+                - provide direct access to AWS Resources from the Client Side (mobile, web app)
+            - example:
+                - Provide (temporary) access to write to S3 bucket using Facebook Login
+            - problem:
+                - we don’t want to create IAM users for our app users
+            - how:
+                - log in to federated identity provider – or remain anonymous
+                - get temporary AWS credentials back from the Federated Identity Pool
+                - these credentials come with a pre-defined IAM policy stating their permissions
+
+### AWS Directory Services
+
+- what is Microsoft AD
+    - found on any Windows Server with AD Domain Services
+    - database of objects: User Accounts, Computers, Printers, File Shares, Security Groups
+    - centralized security management, create account, assign permissions
+    - objects are organized in trees 
+    - a group of trees is a forest (with group policy)
+    - LDAP and DNS protocols
+    - Kerboeros, LDAP, and NTLM authentication
+    - highly available
+- AWS Managed Microsoft AD
+    - create your own AD in AWS, manage users locally, supports MFA
+    - AD domain controllers (DCs) running Windows Server
+        - reachable by applications in your VPC
+        - Add DCs for HA and performance
+        - exclusive access to DCs
+    - establish trust connections with your on- premise AD
+        - extend existing AD to on-premises using **AD Trust**
+- AD Connector
+    - Directory Gateway (proxy) to redirect to on- premise AD
+    - users are managed on the on-premise AD
+    - avoid caching info in the cloud
+    - allow on-prem users to log in to AWS using AD
+	- scale across multiple AD Connectors
+    - use-case:
+        - join EC2 instances to your existing AD domain
+- Simple AD
+    - AD-compatible managed directory on AWS
+    - Basic AD features
+    - Small = 500; Large = 5,000 users
+    - cannot be joined with on-premise AD
+        - does not support **AD Trust**
+    - use-cases:
+        - easier to manage EC2 
+        - linux workloads that need LDAP
+* Amazon Cloud Directory
+    * not support for AD
+    * directory-based store for developers
+    * multiple hierarchies with hundreds of millions of objects
+    * use cases: org charts, course catalogs, device registries
+    * fully managed service
+
+
+
+### AWS Organizations
+
+- overview
+    - global service
+    - allows to manage multiple AWS accounts
+        - the main account is the master account – you can’t change it
+        - other accounts are member accounts
+            - member accounts can only be part of one organization
+    - `Consolidated Billing` across all accounts - single payment method
+    - pricing benefits from aggregated usage (volume discount for EC2, S3)
+    - API is available to automate AWS account creation
+- Multi Account Strategies
+    - create accounts per department, per cost center, per dev / test / prod,
+        - based on regulatory restrictions (using SCP), for better resource isolation (ex: VPC),
+        - to have separate per-account service limits, isolated account for logging
+    - Multi Account vs One Account Multi VPC
+        - use tagging standards for billing purposes
+        - enable CloudTrail on all accounts, send logs to central S3 account
+        - send CloudWatch Logs to central logging account
+        - establish Cross Account Roles for Admin purposes
+- Service Control Policies (SCP)
+    - whitelist or blacklist IAM actions
+    - applied at the operation unit (OU) or Account level
+    - does not apply to the Master Account
+    - SCP is applied to all the Users and Roles of the Account, including Root user
+    - the SCP does not affect service-linked roles
+        - service-linked roles enable other AWS services to integrate with AWS Organizations and can't be restricted by SCPs.
+    - SCP must have an **explicit** Allow (does not allow anything by default)
+    - use cases:
+        - restrict access to certain services (for example: can't use EMR)
+        - enforce PCI compliance by explicitly disabling services
+- Moving Accounts
+    - To migrate accounts from one organization to another
+            1.  remove the member account from the old organization
+            2.  send an invite to the new organization
+            3.  accept the invite to the new organization from the member account
+    - If you want the master account of the old organization to also join the new organization, do the following:
+            1.  remove the member accounts from the organizations using procedure above
+            2.  delete the old organization
+            3.  repeat the process above to invite the old master account to the new org
+- AWS Organization Best Practice
+    - use MFA on root account
+    - paying account should be used for billing purposes only 
+        - do not deploy resources into the paying account
+    - enable / disable AWS services using SCP on OU or individual accounts level
+
+### IAM Advanced
+
+- IAM Conditions
+    - "aws:SourceIP" - restrict / allow specific IP from which the API calls are being made
+    - "aws:RequestRegion" - restrict / allow the region the API calls are made to
+    - "aws:PrincipalTag" / "ec2:ResourceTag" - restrict based on tags
+    - "aws:MultiFactorAuthPresent" - force MFA
+- IAM for S3
+    - ListBucket permission applies to "arn:aws:s3:::bucketname"
+        - bucket level permission
+    - GetObject, PutObject, DeleteObject applies to "arn:aws:s3:::bucketname/*"
+        - object level permission
+- IAM Roles vs Resource Based Policies
+    - when you assume a role (user, application or service), you give up your original permissions and take the permissions assigned to the role
+    - when using a resource based policy, the principal doesnt have to give up his permissions
+    - example: user in account A needs to scan a DynamoDB table in account A and dump it in an S3 bucket in account B.
+    - supported by: Amazon S3 buckets, SNS topics, SQS queues
+- IAM Permission Boundaries
+    - IAM Permission Boundaries are supported for users and roles (not groups)
+    - advanced feature to use a managed policy to set the maximum permissions an IAM entity can get.
+    - can be used in combinations of AWS Organizations SCP
+        - ![f38e82422ac69f605d35bb7c6b1c93a4.png](./_resources/f44047c8faa04829aeebf37f8cfc0d9e.png)
+    - use cases
+        - delegate responsibilities to non administrators within their permission boundaries, for example create new IAM users
+        - allow developers to self-assign policies and manage their own permissions, while making sure they can't *escalate* their privileges (= make themselves admin)
+        - useful to restrict one specific user (instead of a whole account using Organizations & SCP)
+- IAM Policy Evaluation Logic
+    - ![6383f0bc99f5ae91c79b0d20e8badc08.png](./_resources/17f1757a8e9a4990be8d2d23bce39108.png)
+
+### AWS Resource Access Manager (RAM)
+
+- overview
+    - share AWS resources that you own with other AWS accounts
+    - share with any account or within your Organization
+    - avoid resource duplication!
+    - AWS resources that are sharable:
+        - App Mesh, Aurora, CodeBuild, EC2, EC2 Image Builder, License Manager, Resource Groups, Route 53
+    - VPC Subnets:
+        - Allow to have all the resources launched in the same subnets
+        - Must be from the same AWS Organizations.
+        - cannot share security groups and default VPC
+        - participants can manage their own resources in there
+        - participants can't view, modify, delete resources that belong to other participants or the owner
+    - AWS Transit Gateway
+    - Route53 Resolver Rules
+    - License Manager Configurations
+- VPC example
+    - each account
+        - is responsible for its own resources
+        - cannot view, modify or delete other resources in other accounts
+    - network is shared so
+        - anything deployed in the VPC can talk to other resources in the VPC
+        - applications are accessed easily across accounts, using private IP!
+        - security groups from other accounts can be referenced for maximum security
+
+### AWS Single Sign-On (SSO)
+
+- overview
+    - centrally manage Single Sign-On to access multiple accounts and 3rd-party business applications.
+    - integrated with AWS Organizations
+    - supports SAML 2.0 markup
+        - allow you log into applications based on their sessions in another context
+        - e.g., Microsoft AD => Google Drive
+    - integration with on-premise Active Directory
+    - centralized permission management
+    - centralized auditing with CloudTrail
 ## Amazon EC2
 
 ### What is EC2:
@@ -683,7 +918,7 @@
 		- you can move an existing instance (in the stopped state) into a placement group
 		- you can move or remove an instance from placement group using AWS CLI or an AWS SDK
 
-### ELastic Network Interfaces (ENI)
+### Elastic Network Interfaces (ENI)
 
 - logical component in a VPC that represents a virtual network card
 - the ENI can have the following attributes:
@@ -1086,7 +1321,7 @@
     * Load Balancer Security Groups:
         ```mermaid
         flowchart LR
-        A(Usuer) <--HTTPS/HTTP<br>From anywhere--> B[Load Balancer]
+        A(User) <--HTTPS/HTTP<br>From anywhere--> B[Load Balancer]
         B <--HTTP Restricted<br>to Load balancer--> C([EC2])
         ```
 * load balancer good to know:
@@ -1221,7 +1456,7 @@
     * ASG are free. You pay for the underlying resources being launched
     * if instances under an ASG are terminated for whatever reason, the ASG will automatically **create new ones as a replacement**. 
         * ASG can terminate instances marked as unhealthy by an LB (and hence replace them)
-            
+
 ### ASG - Dynamic Scaling Policies
 * target tracking scaling
     * most simple and easy to set-up
@@ -1545,6 +1780,304 @@ B ==yes==> D(ignore action)
 * Lazy Loading: all the read data is cached, data can become stale in cache
 * Write Through: add or update data in the cache when written to a DB (no stale data)
 * Session Store: store temporary session data in a cache (using TTL features)
+
+
+## Database in AWS
+
+### Choosing the Right Database
+* we have a lot of managed databases on AWS to choose from
+* questions to choose the right database based on your architecture:
+    * read-heavy, write-heavy, or balanced workload? throughput needs? will it change, does it need to scale or fluctuate during the day?
+    * how much data to store and for how long? will it grow? average object size?  how are they accessed?
+    * data durability? source of truth for the data ?
+    * latency requirements? concurrent users?
+    * data model? how will you query the data? joins? structured? semi-structured?
+    * strong schema? more flexibility? reporting? search? rdbms / nosql?
+        * RDBMS: relational database management system
+    * license costs? Switch to Cloud Native DB such as Aurora?
+* Database Types
+    * RDBMS (= SQL / OLTP) - great for joins
+        * RDS, Aurora 
+    * NoSQL database - no joins, no SQL
+        * DynamoDB (~JSON), 
+        * ElastiCache (key / value pairs), 
+        * graphs: 
+            * Neptune -displays relationships between data
+    * object store: 
+        * S3 (for big objects) / Glacier (for backups / archives)
+    * data warehouse (= SQL Analytics / BI): 
+        * Redshift (OLAP), 
+        * Athena
+    * search - free text, unstructured searches
+        * ElasticSearch (JSON) 
+
+
+### RDS 
+* Overview
+    * managed PostgreSQL / MySQL / Oracle / SQL Server
+    * must provision an EC2 instance & EBS Volume type and size
+    * support for Read Replicas and Multi AZ
+    * security through IAM, Security Groups, KMS , SSL in transit
+    * backup / snapshot / point in time restore feature
+    * managed and scheduled maintenance
+    * monitoring through CloudWatch
+    * use case: store relational datasets (RDBMS / OLTP), perform SQL queries, transactional inserts / update / delete is available
+* for the exam
+    * **operations**: small downtime when failover happens, when maintenance happens, scaling in read replicas / ec2 instance / restore EBS implies manual intervention, application changes
+    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, authorizing users in DB, using SSL
+    * **reliability**: Multi AZ feature, failover in case of failures
+    * **performance**: depends on EC2 instance type, EBS volume type, ability to add Read Replicas. Doesn’t auto-scale
+    * **cost**: Pay per hour based on provisioned EC2 and EBS
+
+
+### Aurora
+* overview
+    * compatible API for PostgreSQL / MySQL
+    * data is held in 6 replicas, across 3 AZ
+    * auto healing capability
+    * multi AZ, Auto Scaling Read Replicas
+    * read Replicas can be Global
+    * aurora database can be Global for DR or latency purposes
+    * auto scaling of storage from 10GB to 64 TB
+    * define EC2 instance type for aurora instances
+    * same security / monitoring / maintenance features as RDS
+    * `Aurora Serverless` for unpredictable / intermittent workloads
+    * `Aurora Multi-Master` for continuous writes failover
+    * use case: same as RDS, but with less maintenance / more flexibility / more performance
+* for the exam
+    * **operations**: less operations, auto scaling storage
+    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, authorizing users in DB, using SSL
+    * **reliability**: Multi AZ, highly available, possibly more than RDS, Aurora Serverless option, Aurora Multi-Master option
+    * **performance**: 5x performance (according to AWS) due to architectural optimizations. Up to 15 Read Replicas (only 5 for RDS)
+    * **cost**: Pay per hour based on EC2 and storage usage. Possibly lower costs compared to Enterprise grade databases such as Oracle
+
+
+### ElastiCache
+* overview
+    * managed Redis / Memcached (similar offering as RDS, but for caches)
+    * in-memory data store, sub-millisecond latency
+    * must provision an EC2 instance type
+    * support for Clustering (Redis) and Multi AZ, Read Replicas (sharding)
+    * security through IAM, Security Groups, KMS, Redis Auth
+    * backup / snapshot / point in time restore feature
+    * managed and scheduled maintenance
+    * monitoring through CloudWatch
+    * use case: key/value store, frequent reads, less writes, cache results for DB queries, store session data for websites, cannot use SQL.
+* for the exam
+    * **operations**: same as RDS
+    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, users (Redis Auth), using SSL
+    * **reliability**: Clustering, Multi AZ
+    * **performance**: sub-millisecond performance, in memory, read replicas for sharding, very popular cache option
+    * **cost**: pay per hour based on EC2 and storage usag
+
+
+### DynamoDB
+* overview
+    * AWS proprietary technology, managed NoSQL database
+		* data stored on SSD storage
+    * serverless, provisioned capacity, auto scaling, on demand capacity (Nov 2018)
+    * can replace ElastiCache as a key/value store (storing session data for example)
+    * highly Available, Multi AZ by default (spread across 3 AZs), Read and Writes are decoupled, DAX for read cache
+    * reads can be eventually consistent (by default) or strongly consistent 
+            * eventually consistent has better read performance
+            * if you needs read the data within 1 second after write >> choose strongly consistent
+    * security, authentication and authorization is done through IAM
+    * DynamoDB Streams to integrate with AWS Lambda
+    * backup / restore feature, **Global Table** feature
+    * monitoring through CloudWatch
+    * can only query on primary key, sort key, or indexes
+    * use case: Serverless applications development (small documents 100s KB), distributed serverless cache, doesn’t have SQL query language available, has transactions capability from Nov 2018
+* DynamoDB Accelarator (DAX):
+    * fully managed, highly available, in-memory cache
+    * 10x performance improvement
+    * reduces request time from millisecond to microsecounds
+    * no need for developers to manage caching logic
+    * compatible with DynamoDB API calls
+* transactions:
+    * multiple "all-or-nothing" operations.e.g., financial transactions, fulfilling orders
+    * 2 underlying reads or writes - prepare/commit
+    * up to 25 items or 4 MB of data
+* on-demand capacity
+    * pay-per-request pricing
+    * balance cost and performance
+    * no minimum capacity
+    * no charge for read/write - only storage and backups
+    * could end up pay more per request than with provisioned capacity
+    * use for new product launches
+* on-demand backup and restore
+    * backup:
+        * full backups at any time
+        * 0 impact on table performance or available
+        * consistent within seconds and retained until deleted
+        * operates within same region as the source table
+    * restore: point-in-time recovery (PITR)
+        * restore to any point in the last 35 days
+        * incremental backups
+        * not enabled by default
+        * latest restorable: 5 minutes in the past
+* Stream:
+	* time-ordered sequence of item-level changes in a table
+	* stored for 24 hours
+	* insert, updates and deletes
+	* combine with Lambda functions for functionalaty like stored procedures
+* Global Tables
+	* managed multi-master, multi-region replication
+	* based on DynamoDB streams
+	* no application rewrites
+	* replication latency under 1 second
+* Security / Connection
+	* encryption at rest using KMS
+	* site-to-site VPN with VPC endpoints
+	* Direct Connect (DX)
+	* fine-grained access
+* for the exam
+    * **operations**: no operations needed, auto scaling capability, serverless
+    * **security**: full security through IAM policies, KMS encryption, SSL in flight
+    * **reliability**: Multi AZ, Backups
+    * **performance**: single digit millisecond performance, DAX for caching reads, performance doesn’t degrade if your application scales
+    * **cost**: Pay per provisioned capacity and storage usage (no need to guess in advance any capacity – can use auto scaling)
+
+
+### S3
+* overview
+    * S3 is a… key / value store for objects
+    * great for big objects, not so great for small objects
+    * serverless, scales infinitely, max object size is 5 TB
+    * eventually consistency for overwrites and deletes
+    * tiers: S3 Standard, S3 IA, S3 One Zone IA, Glacier for backups
+    * features: versioning, encryption, cross region replication, etc…
+    * security: IAM, Bucket Policies, ACL
+    * encryption: SSE-S3, SSE-KMS, SSE-C, client side encryption, SSL in transit
+    * use case: static files, key value store for big files, website hosting
+* for the exam
+    * **operations**: no operations needed
+    * **security**: IAM, Bucket Policies, ACL, Encryption (Server/Client), SSL
+    * **reliability**: 99.999999999% durability / 99.99% availability, Multi AZ, CRR
+    * **performance**: scales to thousands of read / writes per second, transfer acceleration / multi-part for big files
+    * **cost**: pay per storage usage, network cost, requests number
+
+
+### Athena
+* overview
+    * fully serverless database with sql capabilities
+    * used to query data in S3
+    * pay per query
+    * output results back to S3
+    * secured through IAM
+    * use case: one time SQL queries, serverless queries on S3, log analytics
+* for the exam
+    * **operations**: no operations needed, serverless
+    * **security**: IAM + S3 security
+    * **reliability**: managed service, uses Presto engine, highly available
+    * **performance**: queries scale based on data size
+    * **cost**: pay per query / per TB of data scanned, serverless
+
+
+### Redshift
+* overview
+    * Redshift is based on PostgreSQL, but it’s not used for OLTP (online transaction processing)
+    * it’s OLAP – online analytical processing (analytics and data warehousing)
+        * applies complex queries to large amounts of historical data, aggregated from OLTP databases and other sources,
+        * for data mining, analytics, and business intelligence projects. 
+    * 10x better performance than other data warehouses, scale to PBs of data
+    * columnar storage of data (instead of row based)
+    * Massively Parallel Query Execution (MPP)
+    * pay as you go based on the instances provisioned
+    * has a SQL interface for performing the queries
+    * BI tools such as AWS Quicksight or Tableau integrate with it
+    * data is loaded from S3, DynamoDB, DMS, other DBs
+        * Kinesis Data Firehose to Redshift cluster via S3 copy
+        * S3 bucket to Redshift cluster via Internet or Enhanced VPC Routing
+            * with Internet: using COPY command
+            * Redshift Enhanced VPC Routing: COPY / UNLOAD goes through VPC
+        * EC2 instance to Redshift cluster (better to write data in batches) 
+            * e.g., with JDBC driver: Java Database Connectivity
+    * from 1 node to 128 nodes, up to 160 GB of space per node
+		* support single node mode and multi-node
+			* leader node: for query planning, results aggregation (no charge)
+			* compute node: for performing the queries, send results to leader (be charged upon)
+    * Redshift Spectrum: perform queries directly against S3 
+        * query data that is already in S3 without loading it
+        * must have a `Redshift cluster` available to start the query
+        * the query is then submitted to thousands of Redshift Spectrum nodes
+    * snapshots & DR:
+        * Redshift has no “Multi-AZ” mode
+        * snapshots are point-in-time backups of a cluster, stored internally in S3
+        * snapshots are incremental (only what has changed is saved)
+        * you can restore a snapshot into a new cluster
+        * automated: every 8 hours, every 5 GB, or on a schedule. set retention
+			* by default 1 day to maximum retention period of 35 days
+			* always attempts to keep at least 3 copies of your data
+        * manual: snapshot is retained until you delete it
+        * you can configure Amazon Redshift to automatically copy snapshots (automated or manual) of a cluster to another AWS Region
+* for the exam:
+    * **operations**: like RDS
+    * **security**: IAM, VPC, KMS, SSL (like RDS)
+    * **reliability**: auto healing features, cross-region snapshot copy
+    * **performance**: 10x performance vs other data warehousing, compression
+    * **cost**: pay per node provisioned, 1/10th of the cost vs other warehouses
+    * **Vs **Athena: faster queries / joins / aggregations thanks to indexes
+    * **remember**: Redshift = Analytics / BI / Data Warehouse
+
+
+### AWS Glue
+* managed extract, transform, and load (ETL) service
+* useful to prepare and transform data for analytics
+* fully serverless service
+* Glue Data Catalog: catalog of datasets
+	* inputs: S3, RDS, DynamoDB, JDBC
+	* process: AWS Glue Data Crawler => writes Metadata
+	* output: Athena, Redshift Spectrum,EMR (Elastic MapReduce)
+
+### EMR
+* EMR is a cloud based big data platform for processing vast amounts of data using open source tools such as Apache Spark, Hive, HBase, Flink, Hudi, and Presto
+	* with EMR, you can run petabyte-scale analysis at less than half the cost of traditional on-prem solutions
+	* 3 time faster than standard Apache Spark
+	* the central component of EMR is the cluster (a collection of EC2 instance, a.k.a. a node)
+		* EMR installs different software components on each node type (giving each node a role in a distributed application like Apache Hadoop)
+			* master node: a node that manages the cluster
+			* core node: runs tasks and stores data
+			* task node: only runs tasks and does not store data in HDFS (task node is optional)
+		* supports periodically archive the log file stored on the master node to S3 (at 5 min intervals)
+			* need to be configured when creating the cluster for the first time
+
+
+### Neptune
+* overview
+    * fully managed graph database
+    * when do we use Graphs?
+        * high relationship data
+        * social networking: Users friends with Users, replied to comment on post of user and likes other comments.
+        * knowledge graphs (Wikipedia)
+    * highly available across 3 AZ, with up to 15 read replicas
+    * point-in-time recovery, continuous backup to Amazon S3
+    * support for KMS encryption at rest + HTTPS
+* for the exam
+    * **operations**: similar to RDS
+    * **security**: IAM, VPC, KMS, SSL (similar to RDS) + IAM Authentication
+    * **reliability**: Multi-AZ, clustering
+    * **performance**: best suited for graphs, clustering to improve performance
+    * **cost**: pay per node provisioned (similar to RDS)
+    * **remember**: Neptune = Graphs
+
+
+### ElasticSearch
+* overview
+    * example: In DynamoDB, you can only find by primary key or indexes.
+        * with ElasticSearch, you can search any field, even partially matches
+    * it’s common to use ElasticSearch as a complement to another database
+    * ElasticSearch also has some usage for Big Data applications
+    * you can provision a cluster of instances
+    * built-in integrations: Amazon Kinesis Data Firehose, AWS IoT, and Amazon CloudWatch Logs for data ingestion
+    * security through Cognito & IAM, KMS encryption, SSL & VPC
+    * comes with Kibana (visualization) & Logstash (log ingestion) – ELK stack
+* for the exam
+    * **operations**: similar to RDS
+    * **security**: Cognito, IAM, VPC, KMS, SSL
+    * **reliability**: Multi-AZ, clustering
+    * **performance**: based on ElasticSearch project (open source), petabyte scale
+    * **cost**: pay per node provisioned (similar to RDS)
+    * **remember**: ElasticSearch = Search / Indexing
 
 
 ## Route53
@@ -3618,304 +4151,6 @@ E--insert-->H[Amazon RDS]
     ![4ccf97252c82d753ab1a08fed8ef750c.png](./_resources/f242efdc0ec44e3290cfb6a8de47fbd9.png)
 
 
-## Database in AWS
-
-### Choosing the Right Database
-* we have a lot of managed databases on AWS to choose from
-* questions to choose the right database based on your architecture:
-    * read-heavy, write-heavy, or balanced workload? throughput needs? will it change, does it need to scale or fluctuate during the day?
-    * how much data to store and for how long? will it grow? average object size?  how are they accessed?
-    * data durability? source of truth for the data ?
-    * latency requirements? concurrent users?
-    * data model? how will you query the data? joins? structured? semi-structured?
-    * strong schema? more flexibility? reporting? search? rdbms / nosql?
-        * RDBMS: relational database management system
-    * license costs? Switch to Cloud Native DB such as Aurora?
-* Database Types
-    * RDBMS (= SQL / OLTP) - great for joins
-        * RDS, Aurora 
-    * NoSQL database - no joins, no SQL
-        * DynamoDB (~JSON), 
-        * ElastiCache (key / value pairs), 
-        * graphs: 
-            * Neptune -displays relationships between data
-    * object store: 
-        * S3 (for big objects) / Glacier (for backups / archives)
-    * data warehouse (= SQL Analytics / BI): 
-        * Redshift (OLAP), 
-        * Athena
-    * search - free text, unstructured searches
-        * ElasticSearch (JSON) 
-
-
-### RDS 
-* Overview
-    * managed PostgreSQL / MySQL / Oracle / SQL Server
-    * must provision an EC2 instance & EBS Volume type and size
-    * support for Read Replicas and Multi AZ
-    * security through IAM, Security Groups, KMS , SSL in transit
-    * backup / snapshot / point in time restore feature
-    * managed and scheduled maintenance
-    * monitoring through CloudWatch
-    * use case: store relational datasets (RDBMS / OLTP), perform SQL queries, transactional inserts / update / delete is available
-* for the exam
-    * **operations**: small downtime when failover happens, when maintenance happens, scaling in read replicas / ec2 instance / restore EBS implies manual intervention, application changes
-    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, authorizing users in DB, using SSL
-    * **reliability**: Multi AZ feature, failover in case of failures
-    * **performance**: depends on EC2 instance type, EBS volume type, ability to add Read Replicas. Doesn’t auto-scale
-    * **cost**: Pay per hour based on provisioned EC2 and EBS
-
-
-### Aurora
-* overview
-    * compatible API for PostgreSQL / MySQL
-    * data is held in 6 replicas, across 3 AZ
-    * auto healing capability
-    * multi AZ, Auto Scaling Read Replicas
-    * read Replicas can be Global
-    * aurora database can be Global for DR or latency purposes
-    * auto scaling of storage from 10GB to 64 TB
-    * define EC2 instance type for aurora instances
-    * same security / monitoring / maintenance features as RDS
-    * `Aurora Serverless` for unpredictable / intermittent workloads
-    * `Aurora Multi-Master` for continuous writes failover
-    * use case: same as RDS, but with less maintenance / more flexibility / more performance
-* for the exam
-    * **operations**: less operations, auto scaling storage
-    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, authorizing users in DB, using SSL
-    * **reliability**: Multi AZ, highly available, possibly more than RDS, Aurora Serverless option, Aurora Multi-Master option
-    * **performance**: 5x performance (according to AWS) due to architectural optimizations. Up to 15 Read Replicas (only 5 for RDS)
-    * **cost**: Pay per hour based on EC2 and storage usage. Possibly lower costs compared to Enterprise grade databases such as Oracle
-
-
-### ElastiCache
-* overview
-    * managed Redis / Memcached (similar offering as RDS, but for caches)
-    * in-memory data store, sub-millisecond latency
-    * must provision an EC2 instance type
-    * support for Clustering (Redis) and Multi AZ, Read Replicas (sharding)
-    * security through IAM, Security Groups, KMS, Redis Auth
-    * backup / snapshot / point in time restore feature
-    * managed and scheduled maintenance
-    * monitoring through CloudWatch
-    * use case: key/value store, frequent reads, less writes, cache results for DB queries, store session data for websites, cannot use SQL.
-* for the exam
-    * **operations**: same as RDS
-    * **security**: AWS responsible for OS security, we are responsible for setting up KMS, security groups, IAM policies, users (Redis Auth), using SSL
-    * **reliability**: Clustering, Multi AZ
-    * **performance**: sub-millisecond performance, in memory, read replicas for sharding, very popular cache option
-    * **cost**: pay per hour based on EC2 and storage usag
-
-
-### DynamoDB
-* overview
-    * AWS proprietary technology, managed NoSQL database
-		* data stored on SSD storage
-    * serverless, provisioned capacity, auto scaling, on demand capacity (Nov 2018)
-    * can replace ElastiCache as a key/value store (storing session data for example)
-    * highly Available, Multi AZ by default (spread across 3 AZs), Read and Writes are decoupled, DAX for read cache
-    * reads can be eventually consistent (by default) or strongly consistent 
-            * eventually consistent has better read performance
-            * if you needs read the data within 1 second after write >> choose strongly consistent
-    * security, authentication and authorization is done through IAM
-    * DynamoDB Streams to integrate with AWS Lambda
-    * backup / restore feature, **Global Table** feature
-    * monitoring through CloudWatch
-    * can only query on primary key, sort key, or indexes
-    * use case: Serverless applications development (small documents 100s KB), distributed serverless cache, doesn’t have SQL query language available, has transactions capability from Nov 2018
-* DynamoDB Accelarator (DAX):
-    * fully managed, highly available, in-memory cache
-    * 10x performance improvement
-    * reduces request time from millisecond to microsecounds
-    * no need for developers to manage caching logic
-    * compatible with DynamoDB API calls
-* transactions:
-    * multiple "all-or-nothing" operations.e.g., financial transactions, fulfilling orders
-    * 2 underlying reads or writes - prepare/commit
-    * up to 25 items or 4 MB of data
-* on-demand capacity
-    * pay-per-request pricing
-    * balance cost and performance
-    * no minimum capacity
-    * no charge for read/write - only storage and backups
-    * could end up pay more per request than with provisioned capacity
-    * use for new product launches
-* on-demand backup and restore
-    * backup:
-        * full backups at any time
-        * 0 impact on table performance or available
-        * consistent within seconds and retained until deleted
-        * operates within same region as the source table
-    * restore: point-in-time recovery (PITR)
-        * restore to any point in the last 35 days
-        * incremental backups
-        * not enabled by default
-        * latest restorable: 5 minutes in the past
-* Stream:
-	* time-ordered sequence of item-level changes in a table
-	* stored for 24 hours
-	* insert, updates and deletes
-	* combine with Lambda functions for functionalaty like stored procedures
-* Global Tables
-	* managed multi-master, multi-region replication
-	* based on DynamoDB streams
-	* no application rewrites
-	* replication latency under 1 second
-* Security / Connection
-	* encryption at rest using KMS
-	* site-to-site VPN with VPC endpoints
-	* Direct Connect (DX)
-	* fine-grained access
-* for the exam
-    * **operations**: no operations needed, auto scaling capability, serverless
-    * **security**: full security through IAM policies, KMS encryption, SSL in flight
-    * **reliability**: Multi AZ, Backups
-    * **performance**: single digit millisecond performance, DAX for caching reads, performance doesn’t degrade if your application scales
-    * **cost**: Pay per provisioned capacity and storage usage (no need to guess in advance any capacity – can use auto scaling)
-
-
-### S3
-* overview
-    * S3 is a… key / value store for objects
-    * great for big objects, not so great for small objects
-    * serverless, scales infinitely, max object size is 5 TB
-    * eventually consistency for overwrites and deletes
-    * tiers: S3 Standard, S3 IA, S3 One Zone IA, Glacier for backups
-    * features: versioning, encryption, cross region replication, etc…
-    * security: IAM, Bucket Policies, ACL
-    * encryption: SSE-S3, SSE-KMS, SSE-C, client side encryption, SSL in transit
-    * use case: static files, key value store for big files, website hosting
-* for the exam
-    * **operations**: no operations needed
-    * **security**: IAM, Bucket Policies, ACL, Encryption (Server/Client), SSL
-    * **reliability**: 99.999999999% durability / 99.99% availability, Multi AZ, CRR
-    * **performance**: scales to thousands of read / writes per second, transfer acceleration / multi-part for big files
-    * **cost**: pay per storage usage, network cost, requests number
-
-
-### Athena
-* overview
-    * fully serverless database with sql capabilities
-    * used to query data in S3
-    * pay per query
-    * output results back to S3
-    * secured through IAM
-    * use case: one time SQL queries, serverless queries on S3, log analytics
-* for the exam
-    * **operations**: no operations needed, serverless
-    * **security**: IAM + S3 security
-    * **reliability**: managed service, uses Presto engine, highly available
-    * **performance**: queries scale based on data size
-    * **cost**: pay per query / per TB of data scanned, serverless
-
-
-### Redshift
-* overview
-    * Redshift is based on PostgreSQL, but it’s not used for OLTP (online transaction processing)
-    * it’s OLAP – online analytical processing (analytics and data warehousing)
-        * applies complex queries to large amounts of historical data, aggregated from OLTP databases and other sources,
-        * for data mining, analytics, and business intelligence projects. 
-    * 10x better performance than other data warehouses, scale to PBs of data
-    * columnar storage of data (instead of row based)
-    * Massively Parallel Query Execution (MPP)
-    * pay as you go based on the instances provisioned
-    * has a SQL interface for performing the queries
-    * BI tools such as AWS Quicksight or Tableau integrate with it
-    * data is loaded from S3, DynamoDB, DMS, other DBs
-        * Kinesis Data Firehose to Redshift cluster via S3 copy
-        * S3 bucket to Redshift cluster via Internet or Enhanced VPC Routing
-            * with Internet: using COPY command
-            * Redshift Enhanced VPC Routing: COPY / UNLOAD goes through VPC
-        * EC2 instance to Redshift cluster (better to write data in batches) 
-            * e.g., with JDBC driver: Java Database Connectivity
-    * from 1 node to 128 nodes, up to 160 GB of space per node
-		* support single node mode and multi-node
-			* leader node: for query planning, results aggregation (no charge)
-			* compute node: for performing the queries, send results to leader (be charged upon)
-    * Redshift Spectrum: perform queries directly against S3 
-        * query data that is already in S3 without loading it
-        * must have a `Redshift cluster` available to start the query
-        * the query is then submitted to thousands of Redshift Spectrum nodes
-    * snapshots & DR:
-        * Redshift has no “Multi-AZ” mode
-        * snapshots are point-in-time backups of a cluster, stored internally in S3
-        * snapshots are incremental (only what has changed is saved)
-        * you can restore a snapshot into a new cluster
-        * automated: every 8 hours, every 5 GB, or on a schedule. set retention
-			* by default 1 day to maximum retention period of 35 days
-			* always attempts to keep at least 3 copies of your data
-        * manual: snapshot is retained until you delete it
-        * you can configure Amazon Redshift to automatically copy snapshots (automated or manual) of a cluster to another AWS Region
-* for the exam:
-    * **operations**: like RDS
-    * **security**: IAM, VPC, KMS, SSL (like RDS)
-    * **reliability**: auto healing features, cross-region snapshot copy
-    * **performance**: 10x performance vs other data warehousing, compression
-    * **cost**: pay per node provisioned, 1/10th of the cost vs other warehouses
-    * **Vs **Athena: faster queries / joins / aggregations thanks to indexes
-    * **remember**: Redshift = Analytics / BI / Data Warehouse
-
-
-### AWS Glue
-* managed extract, transform, and load (ETL) service
-* useful to prepare and transform data for analytics
-* fully serverless service
-* Glue Data Catalog: catalog of datasets
-	* inputs: S3, RDS, DynamoDB, JDBC
-	* process: AWS Glue Data Crawler => writes Metadata
-	* output: Athena, Redshift Spectrum,EMR (Elastic MapReduce)
-
-### EMR
-* EMR is a cloud based big data platform for processing vast amounts of data using open source tools such as Apache Spark, Hive, HBase, Flink, Hudi, and Presto
-	* with EMR, you can run petabyte-scale analysis at less than half the cost of traditional on-prem solutions
-	* 3 time faster than standard Apache Spark
-	* the central component of EMR is the cluster (a collection of EC2 instance, a.k.a. a node)
-		* EMR installs different software components on each node type (giving each node a role in a distributed application like Apache Hadoop)
-			* master node: a node that manages the cluster
-			* core node: runs tasks and stores data
-			* task node: only runs tasks and does not store data in HDFS (task node is optional)
-		* supports periodically archive the log file stored on the master node to S3 (at 5 min intervals)
-			* need to be configured when creating the cluster for the first time
-
-
-### Neptune
-* overview
-    * fully managed graph database
-    * when do we use Graphs?
-        * high relationship data
-        * social networking: Users friends with Users, replied to comment on post of user and likes other comments.
-        * knowledge graphs (Wikipedia)
-    * highly available across 3 AZ, with up to 15 read replicas
-    * point-in-time recovery, continuous backup to Amazon S3
-    * support for KMS encryption at rest + HTTPS
-* for the exam
-    * **operations**: similar to RDS
-    * **security**: IAM, VPC, KMS, SSL (similar to RDS) + IAM Authentication
-    * **reliability**: Multi-AZ, clustering
-    * **performance**: best suited for graphs, clustering to improve performance
-    * **cost**: pay per node provisioned (similar to RDS)
-    * **remember**: Neptune = Graphs
-
-
-### ElasticSearch
-* overview
-    * example: In DynamoDB, you can only find by primary key or indexes.
-        * with ElasticSearch, you can search any field, even partially matches
-    * it’s common to use ElasticSearch as a complement to another database
-    * ElasticSearch also has some usage for Big Data applications
-    * you can provision a cluster of instances
-    * built-in integrations: Amazon Kinesis Data Firehose, AWS IoT, and Amazon CloudWatch Logs for data ingestion
-    * security through Cognito & IAM, KMS encryption, SSL & VPC
-    * comes with Kibana (visualization) & Logstash (log ingestion) – ELK stack
-* for the exam
-    * **operations**: similar to RDS
-    * **security**: Cognito, IAM, VPC, KMS, SSL
-    * **reliability**: Multi-AZ, clustering
-    * **performance**: based on ElasticSearch project (open source), petabyte scale
-    * **cost**: pay per node provisioned (similar to RDS)
-    * **remember**: ElasticSearch = Search / Indexing
-
-
 ## AWS Monitoring & Audit
 
 ### AWS CloudWatch
@@ -4139,241 +4374,6 @@ E--insert-->H[Amazon RDS]
     * get timeline of changes and compliance
 
 
-## Identity and Access Management (IAM) - Advanced
-
-### AWS STS - Security Token Service
-
-- overview:
-    - allows to grant limited and temporary access to AWS resources
-    - token is valid for up to one hour (must be refreshed)
-    - AssumeRole
-        - within your own account: for enhanced security
-        - Cross Account Access: assume role in target account to perform actions there
-    - AssumeRoleWithSAML
-        - Return credentials for users logged with SAML
-            - SAML: Security Assertion Markup Language, an open standard that allows identity providers (IdP) to pass authorization credentials to service providers.
-    - AssumeRoleWithWebIdentity
-        - return creds for users logged with an IdProvider (Facebook Login, Google Login, OIDC compatible…)
-        - AWS recommends against using this, and using Cognito instead
-    - GetSessionToken
-        - for MFA, from a user or AWS account root user
-- using STS to assume a role
-    - define an IAM Role within your account or cross-account
-    - define which principals can access this IAM Role
-    - use AWS STS to retrieve credentials and impersonate the IAM Role you have access to (AssumeRole API)
-    - temporary credentials can be valid between 15 minutes to 1 hour
-- cross account access with STS
-    1.  in production account, admin creates role that grants *development account* read/write access to ProductionApp bucket
-    2.  in development account, admin grants members of the *group developers* permission to assume the UpdateApp role
-    3.  developer requests access to role
-    4.  STS returns role credentials
-    5.  developer updates ProductionApp by using the role credentials
-
-### Identity Federation in AWS
-
-- overview:
-    - federation lets users outside of AWS to assume temporary role for accessing AWS resources.
-    - these users assume identity provided access role.
-    - federations can have many flavors:
-        - SAML 2.0
-        - Custom Identity Broker
-        - Web Identity Federation with Amazon Cognito
-        - Web Identity Federation without Amazon Cognito
-        - Single Sign On
-        - Non-SAML with AWS Microsoft AD
-    - using federation, you don’t need to create IAM users (user management is outside of AWS)
-- SAML 2.0 Federation
-    - to integrate Active Directory / ADFS with AWS (or any SAML 2.0)
-    - provides access to AWS Console or CLI (through temporary creds)
-    - no need to create an IAM user for each of your employees
-        - using SAML-based federation for API access to AWS
-            - <img src="./_resources/9a1ab0e2848b47a6894c8bee12c41013.png" alt="79bf4a1307992ae40c8aa4fffb2400af.png" width="803" height="451" class="jop-noMdConv">
-    - enabling SAML 2.0 federated users to access the AWS Management Console
-        - Active Directory federation services (same process as with any SAML 2.0 compatible IdP)
-        - ![3ff78f8e260c2badedba5282c24e9f89.png](./_resources/b06e06af354c4f2da2b4f9648bb65310.png)
-        - needs to setup a trust between AWS IAM and SAML (both ways)
-        - SAML 2.0 enables web-based, cross domain SSO
-        - uses the STS API: AssumeRoleWithSAML
-        - note federation through SAML is the *old way* of doing things
-        - amazon Single Sign On (SSO) Federation is the *new managed and simpler way*
-            - <img src="./_resources/d2a03c941db248aeb3b930d453718bb0.png" alt="5f71089d87825ac43a4010aad50e14bf.png" width="804" height="464" class="jop-noMdConv">
-- Custom Identity Broker Application
-    - use only if identity provider is not compatible with SAML 2.0
-    - the identity broker must determine the appropriate IAM policy
-    - uses the STS API: AssumeRole or GetFederationToken
-    - ![a133386e381aa917d1a372b5bb3a7ff6.png](./_resources/b50a13a9d42c4bb5883085c8692fab6d.png)
-- Web Identity Federation – AssumeRoleWithWebIdentity
-    - not recommended by AWS – use Cognito instead (allows for anonymous users, data synchronization, MFA)
-        - ![6e12784dec3ae9d96a467979460412c0.png](./_resources/4277856be74743648420bda5c81130fd.png)
-        - AWS Cognito
-            - goal:
-                - provide direct access to AWS Resources from the Client Side (mobile, web app)
-            - example:
-                - Provide (temporary) access to write to S3 bucket using Facebook Login
-            - problem:
-                - we don’t want to create IAM users for our app users
-            - how:
-                - log in to federated identity provider – or remain anonymous
-                - get temporary AWS credentials back from the Federated Identity Pool
-                - these credentials come with a pre-defined IAM policy stating their permissions
-
-### AWS Directory Services
-
-- what is Microsoft AD
-    - found on any Windows Server with AD Domain Services
-    - database of objects: User Accounts, Computers, Printers, File Shares, Security Groups
-    - centralized security management, create account, assign permissions
-    - objects are organized in trees 
-    - a group of trees is a forest (with group policy)
-    - LDAP and DNS protocols
-    - Kerboeros, LDAP, and NTLM authentication
-    - highly available
-- AWS Managed Microsoft AD
-    - create your own AD in AWS, manage users locally, supports MFA
-    - AD domain controllers (DCs) running Windows Server
-        - reachable by applications in your VPC
-        - Add DCs for HA and performance
-        - exclusive access to DCs
-    - establish trust connections with your on- premise AD
-        - extend existing AD to on-premises using **AD Trust**
-- AD Connector
-    - Directory Gateway (proxy) to redirect to on- premise AD
-    - users are managed on the on-premise AD
-    - avoid caching info in the cloud
-    - allow on-prem users to log in to AWS using AD
-	- scale across multiple AD Connectors
-    - use-case:
-        - join EC2 instances to your existing AD domain
-- Simple AD
-    - AD-compatible managed directory on AWS
-    - Basic AD features
-    - Small = 500; Large = 5,000 users
-    - cannot be joined with on-premise AD
-        - does not support **AD Trust**
-    - use-cases:
-        - easier to manage EC2 
-        - linux workloads that need LDAP
-* Amazon Cloud Directory
-    * not support for AD
-    * directory-based store for developers
-    * multiple hierarchies with hundreds of millions of objects
-    * use cases: org charts, course catalogs, device registries
-    * fully managed service
-
-
-
-### AWS Organizations
-
-- overview
-    - global service
-    - allows to manage multiple AWS accounts
-        - the main account is the master account – you can’t change it
-        - other accounts are member accounts
-            - member accounts can only be part of one organization
-    - `Consolidated Billing` across all accounts - single payment method
-    - pricing benefits from aggregated usage (volume discount for EC2, S3)
-    - API is available to automate AWS account creation
-- Multi Account Strategies
-    - create accounts per department, per cost center, per dev / test / prod,
-        - based on regulatory restrictions (using SCP), for better resource isolation (ex: VPC),
-        - to have separate per-account service limits, isolated account for logging
-    - Multi Account vs One Account Multi VPC
-        - use tagging standards for billing purposes
-        - enable CloudTrail on all accounts, send logs to central S3 account
-        - send CloudWatch Logs to central logging account
-        - establish Cross Account Roles for Admin purposes
-- Service Control Policies (SCP)
-    - whitelist or blacklist IAM actions
-    - applied at the operation unit (OU) or Account level
-    - does not apply to the Master Account
-    - SCP is applied to all the Users and Roles of the Account, including Root user
-    - the SCP does not affect service-linked roles
-        - service-linked roles enable other AWS services to integrate with AWS Organizations and can't be restricted by SCPs.
-    - SCP must have an **explicit** Allow (does not allow anything by default)
-    - use cases:
-        - restrict access to certain services (for example: can't use EMR)
-        - enforce PCI compliance by explicitly disabling services
-- Moving Accounts
-    - To migrate accounts from one organization to another
-            1.  remove the member account from the old organization
-            2.  send an invite to the new organization
-            3.  accept the invite to the new organization from the member account
-    - If you want the master account of the old organization to also join the new organization, do the following:
-            1.  remove the member accounts from the organizations using procedure above
-            2.  delete the old organization
-            3.  repeat the process above to invite the old master account to the new org
-- AWS Organization Best Practice
-    - use MFA on root account
-    - paying account should be used for billing purposes only 
-        - do not deploy resources into the paying account
-    - enable / disable AWS services using SCP on OU or individual accounts level
-
-### IAM Advanced
-
-- IAM Conditions
-    - "aws:SourceIP" - restrict / allow specific IP from which the API calls are being made
-    - "aws:RequestRegion" - restrict / allow the region the API calls are made to
-    - "aws:PrincipalTag" / "ec2:ResourceTag" - restrict based on tags
-    - "aws:MultiFactorAuthPresent" - force MFA
-- IAM for S3
-    - ListBucket permission applies to "arn:aws:s3:::bucketname"
-        - bucket level permission
-    - GetObject, PutObject, DeleteObject applies to "arn:aws:s3:::bucketname/*"
-        - object level permission
-- IAM Roles vs Resource Based Policies
-    - when you assume a role (user, application or service), you give up your original permissions and take the permissions assigned to the role
-    - when using a resource based policy, the principal doesnt have to give up his permissions
-    - example: user in account A needs to scan a DynamoDB table in account A and dump it in an S3 bucket in account B.
-    - supported by: Amazon S3 buckets, SNS topics, SQS queues
-- IAM Permission Boundaries
-    - IAM Permission Boundaries are supported for users and roles (not groups)
-    - advanced feature to use a managed policy to set the maximum permissions an IAM entity can get.
-    - can be used in combinations of AWS Organizations SCP
-        - ![f38e82422ac69f605d35bb7c6b1c93a4.png](./_resources/f44047c8faa04829aeebf37f8cfc0d9e.png)
-    - use cases
-        - delegate responsibilities to non administrators within their permission boundaries, for example create new IAM users
-        - allow developers to self-assign policies and manage their own permissions, while making sure they can't *escalate* their privileges (= make themselves admin)
-        - useful to restrict one specific user (instead of a whole account using Organizations & SCP)
-- IAM Policy Evaluation Logic
-    - ![6383f0bc99f5ae91c79b0d20e8badc08.png](./_resources/17f1757a8e9a4990be8d2d23bce39108.png)
-
-### AWS Resource Access Manager (RAM)
-
-- overview
-    - share AWS resources that you own with other AWS accounts
-    - share with any account or within your Organization
-    - avoid resource duplication!
-    - AWS resources that are sharable:
-        - App Mesh, Aurora, CodeBuild, EC2, EC2 Image Builder, License Manager, Resource Groups, Route 53
-    - VPC Subnets:
-        - Allow to have all the resources launched in the same subnets
-        - Must be from the same AWS Organizations.
-        - cannot share security groups and default VPC
-        - participants can manage their own resources in there
-        - participants can't view, modify, delete resources that belong to other participants or the owner
-    - AWS Transit Gateway
-    - Route53 Resolver Rules
-    - License Manager Configurations
-- VPC example
-    - each account
-        - is responsible for its own resources
-        - cannot view, modify or delete other resources in other accounts
-    - network is shared so
-        - anything deployed in the VPC can talk to other resources in the VPC
-        - applications are accessed easily across accounts, using private IP!
-        - security groups from other accounts can be referenced for maximum security
-
-### AWS Single Sign-On (SSO)
-
-- overview
-    - centrally manage Single Sign-On to access multiple accounts and 3rd-party business applications.
-    - integrated with AWS Organizations
-    - supports SAML 2.0 markup
-        - allow you log into applications based on their sessions in another context
-        - e.g., Microsoft AD => Google Drive
-    - integration with on-premise Active Directory
-    - centralized permission management
-    - centralized auditing with CloudTrail
 
 
 ## AWS Security & Encryption
